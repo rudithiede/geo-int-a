@@ -12,3 +12,15 @@ services:
     build: ./backend
     ports:
       - "80:80"
+
+  database:
+    image: postgis/postgis
+    restart: always
+    environment:
+      POSTGRES_USER: gidb_user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: geo_int_db
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data/postgis:/var/lib/postgresql/data
