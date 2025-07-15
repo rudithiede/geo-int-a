@@ -12,7 +12,7 @@ export default function Map() {
   const map = useRef(null);
   const lng = 18.4241;
   const lat = -33.9249;
-  const zoom = 14;
+  const zoom = 12;
   const API_KEY = '3WbrRFomAJfm2sX1zUri';
 
 useEffect(() => {
@@ -36,10 +36,27 @@ useEffect(() => {
         return this.container;
     }
 
-    onClick() {
-        new maplibregl.Marker({color: 'red'})
-          .setLngLat([lng + (getRandomFraction()/100), lat + (getRandomFraction()/100)])
-          .addTo(this.map);
+    onClick = async() => {
+      console.log('Adding point...');
+
+        try {
+          const response = await fetch('http://localhost:80/locations/');
+          console.log('Response:', response);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          console.log('Data:', data);
+          for (const feature of data.features) {
+            const { coordinates } = feature.geometry;
+            new maplibregl.Marker({color: 'blue'})
+              .setLngLat(coordinates)
+              .addTo(this.map);
+          }
+          return data.features;
+        } catch (error) {
+          console.error('Error fetching locations:', error);
+      }
     }
 
     onRemove() {
