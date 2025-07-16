@@ -3,6 +3,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from random import randrange
 from uuid import uuid4
+import sqlalchemy
+import psycopg2
+from app.services import engine, create_db_and_tables
 
 app = FastAPI()
 
@@ -13,6 +16,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Create table if necessary
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
 
 def generate_random_number():
     return (randrange(1, 1000)/1000) * 2 - 1
