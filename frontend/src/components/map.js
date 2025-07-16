@@ -40,7 +40,7 @@ useEffect(() => {
       console.log('Adding point...');
 
         try {
-          const response = await fetch('http://localhost:80/locations/');
+          const response = await fetch('http://localhost:80/locations/geojson');
           console.log('Response:', response);
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -49,9 +49,15 @@ useEffect(() => {
           console.log('Data:', data);
           for (const feature of data.features) {
             const { coordinates } = feature.geometry;
-            new maplibregl.Marker({color: 'blue'})
+            const name = feature.properties.name || 'Unnamed Location';
+
+            
+            const marker = new maplibregl.Marker({color: 'blue'})
               .setLngLat(coordinates)
               .addTo(this.map);
+            
+            const popup = new maplibregl.Popup({ offset: 25 }).setText(name);
+            marker.setPopup(popup);
           }
           return data.features;
         } catch (error) {

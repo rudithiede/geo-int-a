@@ -4,8 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from random import randrange
 from uuid import uuid4
 import sqlalchemy
+from sqlalchemy import text
 import psycopg2
 from app.services import engine, create_db_and_tables
+from sqlmodel import Session
+from geoalchemy2.elements import WKTElement
+from shapely import wkt
 
 app = FastAPI()
 
@@ -29,8 +33,35 @@ def generate_random_number():
 def read_root():
     return {"Hello": "World"}
 
-@app.get("/locations/")
-def read_locations():
+@app.get("/locations/geojson")
+async def read_locations():
+    '''Returns the locations found in the database.'''
+    with Session(engine) as session:
+        results = session.exec(text("SELECT id, name, ST_AsText(geom) FROM test_points")).all()
+        locations = {
+            "features": []
+        }
+        for result in results:
+            id = result[0]
+            name = result[1]
+            geom = wkt.loads(result[2])
+            locations["features"].append(
+                {
+                    "id": id,
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [geom.x, geom.y]
+                    },
+                    "properties": {
+                        "name": name
+                    }
+                }
+            )
+        return locations
+
+
+    '''
     locations = {
         "features": []
     }
@@ -47,7 +78,7 @@ def read_locations():
                 }
             }
         )
-    return locations
+    return locations'''
 
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: Union[str, None] = None):

@@ -9,3 +9,27 @@
   width: 100%;
   height: 100%;
 }
+
+.marker-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.marker-pin {
+  width: 12px;
+  height: 12px;
+  background-color: blue;
+  border-radius: 50%;
+}
+
+.marker-text {
+  background: white;
+  color: black;
+  font-size: 11px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin-top: 2px;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
