@@ -142,7 +142,7 @@ class ShowFormControl {
     this.container.parentNode.removeChild(this.container);
     this.map = undefined;
   }
-}  
+}
 
 useEffect(() => {
   if (map.current) return; // stops map from intializing more than once
@@ -156,8 +156,8 @@ useEffect(() => {
     zoom: zoom
   });
 
-  const ShowFormControl = new ShowFormControl(setShowForm);
-  map.current.addControl(ShowFormControl, 'top-left');
+  const showFormControl = new ShowFormControl(setShowForm);
+  map.current.addControl(showFormControl, 'top-left');
 
   // Save markers here
   var currentMarkers = [];
