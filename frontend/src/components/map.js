@@ -29,6 +29,10 @@ function jsonToHtmlTable(data) {
 export default function Map({ setShowNavbar, setNavbarText }) {
   const mapContainer = useRef(null);
   const map = useRef(null);
+
+  // Save markers here
+  const currentMarkers = useRef([]);
+
   const lng = 18.4241;
   const lat = -33.9249;
   const zoom = 12;
@@ -36,6 +40,52 @@ export default function Map({ setShowNavbar, setNavbarText }) {
   const toggleNavbar = () => {
     setShowNavbar(prev => !prev);
   };
+
+  // Function to remove all markers
+  function removeAllMarkers() {
+    currentMarkers.current.forEach(marker => marker.remove());
+    currentMarkers.current = []; // Clear the array
+  }
+
+  async function addStoredPoints() {
+    console.log('Adding stored points...');
+
+    try {
+          removeAllMarkers(); // Clear existing markers before adding new ones
+          const response = await fetch('http://localhost:80/locations/geojson');
+          console.log('Response:', response);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          console.log('Data:', data);
+          var lats = [];
+          var lons = [];
+          for (const feature of data.features) {
+            const { coordinates } = feature.geometry;
+            lats.push(coordinates[1]);
+            lons.push(coordinates[0]);
+            const name = feature.properties.name || 'Unnamed Location';
+
+            const marker = new maplibregl.Marker({color: 'blue'})
+              .setLngLat(coordinates)
+              .addTo(map.current);
+
+            currentMarkers.current.push(marker); // Save marker to currentMarkers array
+            
+            const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`<b>Name:</b> ${name}<br /><br /><b>Category:</b> ${feature.properties.category || 'N/A'}`);
+            marker.setPopup(popup);
+          }
+          const bounds = [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]];
+          map.current.fitBounds(bounds, {
+            padding: 20
+          });
+          return data.features;
+        } catch (error) {
+          console.error('Error fetching locations:', error);
+      }
+  }
+
 
   // Submission form state
   const [showForm, setShowForm] = useState(false);
@@ -80,10 +130,7 @@ export default function Map({ setShowNavbar, setNavbarText }) {
 
       console.log('Submitted successfully!');
 
-      // TODO Refresh markers
-      // not in this context lol
-      removeAllMarkers(); // Clear existing markers before adding new ones
-      //await addStoredPoints(); // Re-fetch and display markers
+      await addStoredPoints(); // Re-fetch and display markers
       
       // Clear the form after successful submission
       setFormData(initialFormData);
@@ -116,6 +163,7 @@ export default function Map({ setShowNavbar, setNavbarText }) {
         console.error("Upload failed:", result);
       } else {
         console.log("Success:", result);
+        await addStoredPoints(); // Re-fetch and display markers
       }
     } catch (err) {
       console.error("Error uploading CSV:", err);
@@ -158,56 +206,6 @@ useEffect(() => {
 
   const showFormControl = new ShowFormControl(setShowForm);
   map.current.addControl(showFormControl, 'top-left');
-
-  // Save markers here
-  var currentMarkers = [];
-
-  // Function to remove all markers
-  function removeAllMarkers() {
-    currentMarkers.forEach(marker => marker.remove());
-    currentMarkers = []; // Clear the array
-  }
-
-  async function addStoredPoints() {
-    console.log('Adding stored points...');
-
-    try {
-          removeAllMarkers(); // Clear existing markers before adding new ones
-          const response = await fetch('http://localhost:80/locations/geojson');
-          console.log('Response:', response);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data = await response.json();
-          console.log('Data:', data);
-          var lats = [];
-          var lons = [];
-          for (const feature of data.features) {
-            const { coordinates } = feature.geometry;
-            lats.push(coordinates[1]);
-            lons.push(coordinates[0]);
-            const name = feature.properties.name || 'Unnamed Location';
-
-            const marker = new maplibregl.Marker({color: 'blue'})
-              .setLngLat(coordinates)
-              .addTo(map.current);
-
-            currentMarkers.push(marker); // Save marker to currentMarkers array
-            
-            const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`<b>Name:</b> ${name}<br /><br /><b>Category:</b> ${feature.properties.category || 'N/A'}`);
-            marker.setPopup(popup);
-          }
-          const bounds = [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]];
-          map.current.fitBounds(bounds, {
-            padding: 20
-          });
-          return data.features;
-        } catch (error) {
-          console.error('Error fetching locations:', error);
-      }
-  }
-
-
 
   // Define "show DB contents" button
   class ShowDBControl {
