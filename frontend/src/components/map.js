@@ -81,6 +81,11 @@ export default function Map({ setShowNavbar, setNavbarText }) {
       }
 
       console.log('Submitted successfully!');
+
+      // Refresh markers
+      // not in this context lol
+      //removeAllMarkers(); // Clear existing markers before adding new ones
+      //await addStoredPoints(); // Re-fetch and display markers
       
       // Clear the form after successful submission
       setFormData(initialFormData);
@@ -90,6 +95,35 @@ export default function Map({ setShowNavbar, setNavbarText }) {
       
     } catch (error) {
       console.error('Submission failed:', error);
+    }
+  };
+
+  const [file, setFile] = useState(null);
+  const handleCSVSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!file) {
+      alert("Please select a CSV file.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("http://localhost:80/import", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        console.error("Upload failed:", result);
+      } else {
+        console.log("Success:", result);
+      }
+    } catch (err) {
+      console.error("Error uploading CSV:", err);
     }
   };
 
@@ -104,7 +138,7 @@ class ShowFormControl {
     this.container.className = 'maplibregl-ctrl';
     this.container.textContent = 'Add New POI';
     this.container.onclick = () => {
-      this.setShowForm(true);
+      this.setShowForm(prev => !prev);
     };
     return this.container;
   }
@@ -120,7 +154,6 @@ useEffect(() => {
 
   setShowNavbar(false); // Hide navbar initially
 
-  
   map.current = new maplibregl.Map({
     container: mapContainer.current,
     style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${API_KEY}`,
@@ -130,6 +163,9 @@ useEffect(() => {
 
   const showFormControl = new ShowFormControl(setShowForm);
   map.current.addControl(showFormControl, 'top-left');
+
+  // Save markers here
+  var currentMarkers = [];
 
   async function addStoredPoints() {
     console.log('Adding stored points...');
@@ -153,6 +189,8 @@ useEffect(() => {
             const marker = new maplibregl.Marker({color: 'blue'})
               .setLngLat(coordinates)
               .addTo(map.current);
+
+            currentMarkers.push(marker); // Save marker to currentMarkers array
             
             const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`<b>Name:</b> ${name}<br /><br /><b>Category:</b> ${feature.properties.category || 'N/A'}`);
             marker.setPopup(popup);
@@ -165,6 +203,12 @@ useEffect(() => {
         } catch (error) {
           console.error('Error fetching locations:', error);
       }
+  }
+
+  // Function to remove all markers
+  function removeAllMarkers() {
+    currentMarkers.forEach(marker => marker.remove());
+    currentMarkers = []; // Clear the array
   }
 
   // Define "show DB contents" button
@@ -217,11 +261,11 @@ useEffect(() => {
   });
 }, [API_KEY, lng, lat, zoom]);
 
-  return (
+return (
   <div className="map-wrap">
     <div ref={mapContainer} className="map" />
 
-<button onClick={toggleForm}>
+  <button onClick={toggleForm}>
         {showForm ? 'Hide Form' : 'Add Location'}
       </button>
 
@@ -238,18 +282,27 @@ useEffect(() => {
     </label><br /><br />
 
     <label>
-      Latitude (e.g. 28.02):<br />
+      Latitude (e.g. -26.02):<br />
       <input type="number" step="any" name="latitude" value={formData.latitude} onChange={handleChange} required />
     </label><br /><br />
 
     <label>
-      Longitude (e.g. -26.55):<br />
+      Longitude (e.g. 28.55):<br />
       <input type="number" step="any" name="longitude" value={formData.longitude} onChange={handleChange} required />
     </label><br /><br />
 
     <button type="submit">Submit</button>
   </form>
 )}
+
+  <form onSubmit={handleCSVSubmit} className='map-csv-form'>
+  <input
+    type="file"
+    accept=".csv"
+    onChange={(e) => setFile(e.target.files[0])}
+  />
+  <button type="submit">Upload New Points (CSV)</button>
+</form>
 
   </div>
 

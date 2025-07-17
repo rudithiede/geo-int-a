@@ -3,6 +3,10 @@ import app.models
 import csv
 from geoalchemy2.elements import WKTElement
 from sqlmodel import Session
+import os
+from typing import Union
+from sqlalchemy import text
+from shapely import wkt
 
 DATABASE_URL = 'postgresql://gidb_user:password@database/geo_int_db'
 
@@ -81,3 +85,64 @@ def add_poi(location):
         session.refresh(poi)
 
     return {"name": poi.name, "category": poi.category}
+
+def raw_location_data():
+    '''
+    Returns all locations from the POI table.
+    '''
+    with Session(engine) as session:
+        results = session.exec(text("SELECT id, name, category, ST_AsText(geom) FROM poi")).all()
+        locations = []
+        for result in results:
+            id = result[0]
+            name = result[1]
+            category = result[2]
+            geom = wkt.loads(result[3])
+            locations.append({
+                "id": id,
+                "name": name,
+                "category": category,
+                "longitude": geom.x,
+                "latitude": geom.y
+            })
+        return locations
+    
+def geojson_location_data():
+    '''
+    Returns all locations from the POI table in GeoJSON format.
+    '''
+    with Session(engine) as session:
+        results = session.exec(text("SELECT id, name, category, ST_AsText(geom) FROM poi")).all()
+        locations = {
+            "features": []
+        }
+        for result in results:
+            id = result[0]
+            name = result[1]
+            category = result[2]
+            geom = wkt.loads(result[3])
+            locations["features"].append(
+                {
+                    "id": id,
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [geom.x, geom.y]
+                    },
+                    "properties": {
+                        "name": name,
+                        "category": category
+                    }
+                }
+            )
+        return locations
+    
+def import_locations(csv_path: Union[str, None] = None):
+    '''
+    Imports locations from a file into the database.
+    '''
+    if not os.path.exists(csv_path):
+        return {"error": "File does not exist."}
+    
+    load_POI_from_csv(csv_path)
+    return {"message": "Locations imported successfully."}
