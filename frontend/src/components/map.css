@@ -33,3 +33,14 @@
   margin-top: 2px;
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
 }
+
+.map-form {
+  position: absolute;
+  top: 60px;
+  left: 10px;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  z-index: 999;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}

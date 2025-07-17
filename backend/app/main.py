@@ -1,5 +1,5 @@
 from typing import Union
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from random import randrange
@@ -7,7 +7,7 @@ from uuid import uuid4
 import sqlalchemy
 from sqlalchemy import text
 import psycopg2
-from app.services import engine, create_db_and_tables, load_POI_from_csv
+from app.services import engine, create_db_and_tables, add_poi
 from sqlmodel import Session
 from geoalchemy2.elements import WKTElement
 from shapely import wkt
@@ -89,3 +89,8 @@ async def read_locations_raw():
                 "latitude": geom.y
             })
         return locations
+
+@app.post("/locations")
+async def create_location(location: dict = Body(...)):
+    '''Creates a new location in the database.'''
+    return add_poi(location)

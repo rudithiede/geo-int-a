@@ -56,3 +56,28 @@ def create_db_and_tables(file_path: str):
     if is_poi_table_empty():
         print("POI table is empty, loading data from CSV...")
         load_POI_from_csv(file_path)
+
+def add_poi(location):
+    '''
+    Adds a new Point of Interest (POI) to the database.
+    '''
+    if not location:
+        return {"error": "No location data provided."}
+    
+    name = location.get("name")
+    category = location.get("category")
+    latitude = location.get("latitude")
+    longitude = location.get("longitude")
+
+    if not name or not latitude or not longitude:
+        return {"error": "Name, latitude, and longitude are required."}
+    
+    geom = WKTElement(f'POINT({longitude} {latitude})', srid=4326)
+    poi = app.models.POI(name=name, category=category, geom=geom)
+
+    with Session(engine) as session:
+        session.add(poi)
+        session.commit()
+        session.refresh(poi)
+
+    return {"name": poi.name, "category": poi.category}

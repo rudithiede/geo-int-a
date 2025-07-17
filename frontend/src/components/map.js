@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './map.css';
@@ -37,17 +37,99 @@ export default function Map({ setShowNavbar, setNavbarText }) {
     setShowNavbar(prev => !prev);
   };
 
+  // Submission form state
+  const [showForm, setShowForm] = useState(false);
+  const initialFormData = {
+    name: '',
+    category: '',
+    latitude: '',
+    longitude: ''
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
+
+  const toggleForm = () => setShowForm(prev => !prev);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Construct JSON
+    const payload = {
+      name: formData.name,
+      category: formData.category,
+      latitude: parseFloat(formData.latitude),
+      longitude: parseFloat(formData.longitude)
+    };
+
+    try {
+      const response = await fetch('http://localhost:80/locations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      console.log('Submitted successfully!');
+      
+      // Clear the form after successful submission
+      setFormData(initialFormData);
+
+      // Optional: Hide the form after submit
+      // setShowForm(false);
+      
+    } catch (error) {
+      console.error('Submission failed:', error);
+    }
+  };
+
+class ShowFormControl {
+  constructor(setShowForm) {
+    this.setShowForm = setShowForm;
+  }
+
+  onAdd(map) {
+    this.map = map;
+    this.container = document.createElement('button');
+    this.container.className = 'maplibregl-ctrl';
+    this.container.textContent = 'Add New POI';
+    this.container.onclick = () => {
+      this.setShowForm(true);
+    };
+    return this.container;
+  }
+
+  onRemove() {
+    this.container.parentNode.removeChild(this.container);
+    this.map = undefined;
+  }
+}  
+
 useEffect(() => {
   if (map.current) return; // stops map from intializing more than once
 
   setShowNavbar(false); // Hide navbar initially
 
+  
   map.current = new maplibregl.Map({
     container: mapContainer.current,
     style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${API_KEY}`,
     center: [lng, lat],
     zoom: zoom
   });
+
+  const showFormControl = new ShowFormControl(setShowForm);
+  map.current.addControl(showFormControl, 'top-left');
 
   async function addStoredPoints() {
     console.log('Adding stored points...');
@@ -91,7 +173,7 @@ useEffect(() => {
       this.map = map;
       this.container = document.createElement('button');
       this.container.className = 'maplibregl-ctrl';
-      this.container.textContent = 'Load Table from Database';
+      this.container.textContent = 'View Database Table';
       this.container.onclick = this.onClick.bind(this);
       return this.container;
     }
@@ -138,6 +220,40 @@ useEffect(() => {
   return (
   <div className="map-wrap">
     <div ref={mapContainer} className="map" />
+
+<button onClick={toggleForm}>
+        {showForm ? 'Hide Form' : 'Add Location'}
+      </button>
+
+      {showForm && (
+  <form onSubmit={handleSubmit} className="map-form">
+    <label>
+      Name:<br />
+      <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+    </label><br /><br />
+
+    <label>
+      Category (e.g. Library):<br />
+      <input type="text" name="category" value={formData.category} onChange={handleChange} />
+    </label><br /><br />
+
+    <label>
+      Latitude (e.g. 28.02):<br />
+      <input type="number" step="any" name="latitude" value={formData.latitude} onChange={handleChange} required />
+    </label><br /><br />
+
+    <label>
+      Longitude (e.g. -26.55):<br />
+      <input type="number" step="any" name="longitude" value={formData.longitude} onChange={handleChange} required />
+    </label><br /><br />
+
+    <button type="submit">Submit</button>
+  </form>
+)}
+
   </div>
+
+
+
   );
 }
