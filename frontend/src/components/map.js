@@ -25,21 +25,9 @@ useEffect(() => {
     zoom: zoom
   });
 
-  // Add custom controls to the map
-  class AddPointControl {
-    onAdd(map) {
-        this.map = map;
-        this.container = document.createElement('button');
-        this.container.className = 'maplibregl-ctrl';
-        this.container.textContent = 'Add Point';
-        this.container.onclick = this.onClick.bind(this);
-        return this.container;
-    }
-
-    onClick = async() => {
-      console.log('Adding point...');
-
-        try {
+  async function addStoredPoints() {
+    console.log('Adding stored points...');
+    try {
           const response = await fetch('http://localhost:80/locations/geojson');
           console.log('Response:', response);
           if (!response.ok) {
@@ -47,21 +35,54 @@ useEffect(() => {
           }
           const data = await response.json();
           console.log('Data:', data);
+          var lats = [];
+          var lons = [];
           for (const feature of data.features) {
             const { coordinates } = feature.geometry;
+            lats.push(coordinates[1]);
+            lons.push(coordinates[0]);
             const name = feature.properties.name || 'Unnamed Location';
 
-            
             const marker = new maplibregl.Marker({color: 'blue'})
               .setLngLat(coordinates)
-              .addTo(this.map);
+              .addTo(map.current);
             
-            const popup = new maplibregl.Popup({ offset: 25 }).setText(name);
+            const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`<b>Name:</b> ${name}<br /><br /><b>Category:</b> ${feature.properties.category || 'N/A'}`);
             marker.setPopup(popup);
           }
+          const bounds = [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]];
+          map.current.fitBounds(bounds, {
+            padding: 20
+          });
           return data.features;
         } catch (error) {
           console.error('Error fetching locations:', error);
+      }
+  }
+
+  // Define "show DB contents" button
+  class ShowDBControl {
+    onAdd(map) {
+      this.map = map;
+      this.container = document.createElement('button');
+      this.container.className = 'maplibregl-ctrl';
+      this.container.textContent = 'Load Table from Database';
+      this.container.onclick = this.onClick.bind(this);
+      return this.container;
+    }
+
+    onClick = async() => {
+      console.log('Reading database...');
+      try {
+        const response = await fetch('http://localhost:80/locations');
+        console.log('Response:', response);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        alert(`Data: ${JSON.stringify(data)}`);
+      } catch (error) {
+        alert('Error fetching locations:', error);
       }
     }
 
@@ -70,10 +91,19 @@ useEffect(() => {
         this.map = undefined;
     }
   }
-  const addPointControl = new AddPointControl();
-  map.current.addControl(addPointControl);
 
+  // Add the custom controls to the map
+  const showDBControl = new ShowDBControl();
+  map.current.addControl(showDBControl);
   map.current.addControl(new maplibregl.NavigationControl());
+
+  // Load stored points from the database
+  map.current.on('load', async () => {
+    console.log('Map loaded, adding stored points...');
+    await addStoredPoints();
+  });
+
+
 
 }, [API_KEY, lng, lat, zoom]);
 
