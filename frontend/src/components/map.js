@@ -82,7 +82,7 @@ export default function Map({ setShowNavbar, setNavbarText }) {
 
       // TODO Refresh markers
       // not in this context lol
-      //removeAllMarkers(); // Clear existing markers before adding new ones
+      removeAllMarkers(); // Clear existing markers before adding new ones
       //await addStoredPoints(); // Re-fetch and display markers
       
       // Clear the form after successful submission
@@ -162,10 +162,17 @@ useEffect(() => {
   // Save markers here
   var currentMarkers = [];
 
+  // Function to remove all markers
+  function removeAllMarkers() {
+    currentMarkers.forEach(marker => marker.remove());
+    currentMarkers = []; // Clear the array
+  }
+
   async function addStoredPoints() {
     console.log('Adding stored points...');
 
     try {
+          removeAllMarkers(); // Clear existing markers before adding new ones
           const response = await fetch('http://localhost:80/locations/geojson');
           console.log('Response:', response);
           if (!response.ok) {
@@ -200,11 +207,7 @@ useEffect(() => {
       }
   }
 
-  // Function to remove all markers
-  function removeAllMarkers() {
-    currentMarkers.forEach(marker => marker.remove());
-    currentMarkers = []; // Clear the array
-  }
+
 
   // Define "show DB contents" button
   class ShowDBControl {
