@@ -7,16 +7,40 @@ function getRandomFraction() {
     return Math.random() * 2 - 1; // Returns a random number between -1 and 1
 }
 
-export default function Map() {
+function jsonToHtmlTable(data) {
+  if (!Array.isArray(data) || data.length === 0) {
+    return '<p>No data available</p>';
+  }
+
+  const headers = Object.keys(data[0]);
+  const headerRow = headers.map(h => `<th>${h}</th>`).join('');
+  const bodyRows = data.map(item =>
+    `<tr>${headers.map(h => `<td>${item[h] ?? ''}</td>`).join('')}</tr>`
+  ).join('');
+
+  return `
+    <table border="1" cellpadding="5" cellspacing="0">
+      <thead><tr>${headerRow}</tr></thead>
+      <tbody>${bodyRows}</tbody>
+    </table>
+  `;
+}
+
+export default function Map({ setShowNavbar, setNavbarText }) {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const lng = 18.4241;
   const lat = -33.9249;
   const zoom = 12;
   const API_KEY = '3WbrRFomAJfm2sX1zUri';
+  const toggleNavbar = () => {
+    setShowNavbar(prev => !prev);
+  };
 
 useEffect(() => {
   if (map.current) return; // stops map from intializing more than once
+
+  setShowNavbar(false); // Hide navbar initially
 
   map.current = new maplibregl.Map({
     container: mapContainer.current,
@@ -27,6 +51,7 @@ useEffect(() => {
 
   async function addStoredPoints() {
     console.log('Adding stored points...');
+
     try {
           const response = await fetch('http://localhost:80/locations/geojson');
           console.log('Response:', response);
@@ -72,6 +97,8 @@ useEffect(() => {
     }
 
     onClick = async() => {
+      setShowNavbar(true); // Show navbar when button is clicked
+      
       console.log('Reading database...');
       try {
         const response = await fetch('http://localhost:80/locations');
@@ -80,9 +107,13 @@ useEffect(() => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        alert(`Data: ${JSON.stringify(data)}`);
+        console.log(`Data: ${JSON.stringify(data)}`);
+
+        const tableHtml = jsonToHtmlTable(data);
+        setNavbarText(tableHtml); // Set the navbar text to the HTML table
+
       } catch (error) {
-        alert('Error fetching locations:', error);
+        console.log('Error fetching locations:', error);
       }
     }
 
@@ -102,9 +133,6 @@ useEffect(() => {
     console.log('Map loaded, adding stored points...');
     await addStoredPoints();
   });
-
-
-
 }, [API_KEY, lng, lat, zoom]);
 
   return (

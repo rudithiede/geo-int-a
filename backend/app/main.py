@@ -75,21 +75,17 @@ async def read_locations_raw():
     '''Returns the locations found in the database as JSON.'''
     with Session(engine) as session:
         results = session.exec(text("SELECT id, name, category, ST_AsText(geom) FROM poi")).all()
-        locations = {
-            "features": []
-        }
+        locations = []
         for result in results:
             id = result[0]
             name = result[1]
             category = result[2]
             geom = wkt.loads(result[3])
-            locations["features"].append(
-                {
-                    "id": id,
-                    "name": name,
-                    "category": category,
-                    "longitude": geom.x,
-                    "latitude": geom.y
-                }
-            )
+            locations.append({
+                "id": id,
+                "name": name,
+                "category": category,
+                "longitude": geom.x,
+                "latitude": geom.y
+            })
         return locations
