@@ -122,7 +122,7 @@ export default function Map({ setShowNavbar, setNavbarText }) {
     }
   };
 
-class ShowNewPOIForm {
+class ShowFormControl {
   constructor(setShowForm) {
     this.setShowForm = setShowForm;
   }
@@ -156,8 +156,8 @@ useEffect(() => {
     zoom: zoom
   });
 
-  const ShowNewPOIForm = new ShowNewPOIForm(setShowForm);
-  map.current.addControl(ShowNewPOIForm, 'top-left');
+  const ShowFormControl = new ShowFormControl(setShowForm);
+  map.current.addControl(ShowFormControl, 'top-left');
 
   // Save markers here
   var currentMarkers = [];
