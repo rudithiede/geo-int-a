@@ -60,7 +60,7 @@ async def create_location(location: dict = Body(...)):
 async def import_CSV(file: UploadFile = File(...)):
     '''
     Imports locations from a CSV file.
-    If no file is provided, it generates random locations.
+    The CSV file should have the following columns: name, category, latitude, longitude.
     '''
     contents = await file.read()
     file_path = os.path.join(STATIC_DIR, 'imported_' + str(uuid4()) + '.csv')

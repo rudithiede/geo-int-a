@@ -13,5 +13,5 @@ class POI(SQLModel, table=True):
         orm_mode = True
 
 __table_args__ = (
-    Index("idx_poi_geom", POI.__table__.c.geom, postgresql_using='gist'),
+    Index("idx_poi_geom_gist", POI.__table__.c.geom, postgresql_using='gist'),
 )

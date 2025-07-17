@@ -48,8 +48,6 @@ export default function Map({ setShowNavbar, setNavbarText }) {
 
   const [formData, setFormData] = useState(initialFormData);
 
-  const toggleForm = () => setShowForm(prev => !prev);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -82,16 +80,13 @@ export default function Map({ setShowNavbar, setNavbarText }) {
 
       console.log('Submitted successfully!');
 
-      // Refresh markers
+      // TODO Refresh markers
       // not in this context lol
       //removeAllMarkers(); // Clear existing markers before adding new ones
       //await addStoredPoints(); // Re-fetch and display markers
       
       // Clear the form after successful submission
       setFormData(initialFormData);
-
-      // Optional: Hide the form after submit
-      // setShowForm(false);
       
     } catch (error) {
       console.error('Submission failed:', error);
@@ -127,7 +122,7 @@ export default function Map({ setShowNavbar, setNavbarText }) {
     }
   };
 
-class ShowFormControl {
+class ShowNewPOIForm {
   constructor(setShowForm) {
     this.setShowForm = setShowForm;
   }
@@ -161,8 +156,8 @@ useEffect(() => {
     zoom: zoom
   });
 
-  const showFormControl = new ShowFormControl(setShowForm);
-  map.current.addControl(showFormControl, 'top-left');
+  const ShowNewPOIForm = new ShowNewPOIForm(setShowForm);
+  map.current.addControl(ShowNewPOIForm, 'top-left');
 
   // Save markers here
   var currentMarkers = [];
@@ -265,9 +260,6 @@ return (
   <div className="map-wrap">
     <div ref={mapContainer} className="map" />
 
-  <button onClick={toggleForm}>
-        {showForm ? 'Hide Form' : 'Add Location'}
-      </button>
 
       {showForm && (
   <form onSubmit={handleSubmit} className="map-form">
