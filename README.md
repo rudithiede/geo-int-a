@@ -14,7 +14,7 @@ Requirements:
 
 With git and docker both installed, clone this repository.
 
-Clone docker-postgis from `https://github.com/kartoza/docker-postgis`. This clones into the `./docker-postgis` folder, which git ignores.
+Clone docker-postgis from `https://github.com/kartoza/docker-postgis` intp the top-level directory (same path as this readme). This clones the postgis docker deployment into the `./docker-postgis` folder, which git ignores.
 
 Run with:
 ```bash
