@@ -3,7 +3,7 @@
 
 echo "⏳ Waiting for PostgreSQL to be ready..."
 
-while ! pg_isready -h database -p 5432 -U gidb_user; do
+while ! pg_isready -h database -p 5430 -U gidb_user; do
   sleep 1
 done
 

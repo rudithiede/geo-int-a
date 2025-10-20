@@ -10,8 +10,11 @@
 Requirements:
 - git
 - docker
+- docker-postgis
 
 With git and docker both installed, clone this repository.
+
+Clone docker-postgis from `https://github.com/kartoza/docker-postgis`. This clones into the `./docker-postgis` folder, which git ignores.
 
 Run with:
 ```bash

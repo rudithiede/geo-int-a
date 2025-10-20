@@ -14,13 +14,13 @@ services:
       - database
 
   database:
-    image: postgis/postgis
+    build: ./docker-postgis
     restart: always
     environment:
       POSTGRES_USER: gidb_user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: geo_int_db
     ports:
-      - 5432:5432
+      - 5430:5432
     volumes:
       - ./data/postgis:/var/lib/postgresql/data
