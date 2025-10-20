@@ -3,6 +3,8 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './map.css';
 
+const API_URL = "http://localhost:80";
+
 function getRandomFraction() {
     return Math.random() * 2 - 1; // Returns a random number between -1 and 1
 }
@@ -52,7 +54,7 @@ export default function Map({ setShowNavbar, setNavbarText }) {
 
     try {
           removeAllMarkers(); // Clear existing markers before adding new ones
-          const response = await fetch('http://localhost:80/locations/geojson');
+          const response = await fetch(API_URL+'/locations/geojson');
           console.log('Response:', response);
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -118,7 +120,7 @@ export default function Map({ setShowNavbar, setNavbarText }) {
     };
 
     try {
-      const response = await fetch('http://localhost:80/locations', {
+      const response = await fetch(API_URL+'/locations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -153,7 +155,7 @@ export default function Map({ setShowNavbar, setNavbarText }) {
     formData.append("file", file);
 
     try {
-      const response = await fetch("http://localhost:80/import", {
+      const response = await fetch(API_URL+'/import', {
         method: "POST",
         body: formData,
       });
@@ -223,7 +225,7 @@ useEffect(() => {
       
       console.log('Reading database...');
       try {
-        const response = await fetch('http://localhost:80/locations');
+        const response = await fetch(API_URL+'/locations');
         console.log('Response:', response);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

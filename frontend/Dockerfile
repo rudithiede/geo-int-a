@@ -1,13 +1,22 @@
-FROM node:22-alpine
+FROM cgr.dev/chainguard/node:latest-dev
 
-WORKDIR /app/
+# Create working directory owned by node user
+RUN mkdir -p /app && chown node:node /app
+WORKDIR /app
 
-COPY package*.json .
+# Switch to node user
+USER node
 
-RUN npm install --omit=dev
+# Copy package files first (for caching)
+COPY --chown=node:node package*.json ./
 
-COPY . .
+# Install dependencies
+RUN npm ci --omit=dev
+
+# Copy app source
+COPY --chown=node:node . .
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["/usr/bin/npm", "start"]
+
