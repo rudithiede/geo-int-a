@@ -11,4 +11,9 @@ Requirements:
 - git
 - docker
 
-With git and docker both installed, retrieve the repository via:
+With git and docker both installed, clone this repository.
+
+Run with:
+```bash
+docker compose up -d
+```
